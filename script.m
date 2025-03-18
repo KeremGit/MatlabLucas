@@ -1,9 +1,9 @@
 %% EEG Preprocessing Pipeline
 
 % Define file paths
-basePath = '/MATLAB Drive/EEG Datasets/ADHD_part1/';
-capPath = '/MATLAB Drive/EEG Datasets/Standard-10-20-Cap19new/';
-savePath = '/MATLAB Drive/Preprocessing Data Sets 2/';
+basePath = './files/ADHD_part1/';
+capPath = './files/Standard-10-20-Cap19new/';
+savePath = './files/Preprocessing Data Sets 2/';
 inputFile = fullfile(basePath, 'v3p.mat');
 capFile = fullfile(capPath, 'Standard-10-20-Cap19new.ced');
 
