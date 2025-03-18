@@ -5,7 +5,7 @@ savePath = '/MATLAB Drive/Preprocessing Data Sets 2/';
 inputFile = fullfile(basePath, 'v3p.mat');
 capFile = fullfile(capPath, 'Standard-10-20-Cap19new.ced');
 
-% Run this? need to do it again but it might save properly now?
+
 [ALLEEG EEG CURRENTSET ALLCOM] = eeglab;
 EEG = pop_importdata('dataformat','matlab','nbchan',0,'data',inputFile,'setname','ADHDP3','srate',128,'subject','ADHD3','pnts',0,'xmin',0,'group','EXP','chanlocs',capFile);
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off'); 
@@ -17,7 +17,7 @@ pop_eegplot( EEG, 1, 1, 1); % This is just a visual aid for data quality inspect
 % This command will remove a number of data channels (it starts with 19) based on data quality. many of the later commands use the number of remaining channels + 1 (the averaged re-reference)
 % and the code will break if this value is incorrect
 
- EEG = pop_clean_rawdata(EEG, 'FlatlineCriterion',5,'ChannelCriterion',0.8,'LineNoiseCriterion',4,'Highpass','off','BurstCriterion',20,'WindowCriterion','off','BurstRejection','off','Distance','Euclidian');
+EEG = pop_clean_rawdata(EEG, 'FlatlineCriterion',5,'ChannelCriterion',0.8,'LineNoiseCriterion',4,'Highpass','off','BurstCriterion',20,'WindowCriterion','off','BurstRejection','off','Distance','Euclidian');
 
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 1,'setname','ADHDP3_CRD','savenew',fullfile(savePath, 'ADHDP3_CRD.set'),'gui','off'); 
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 2,'retrieve',1,'study',0); 
@@ -31,7 +31,9 @@ EEG = pop_reref( EEG, []);
 EEG = pop_eegfiltnew(EEG, 'locutoff',1,'plotfreqz',1);
 
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 3,'setname','ADHDP3_CRD_REREF_HPASS','savenew',fullfile(savePath, 'ADHDP3_CRD_REREF_HPASS.set'),'gui','off'); 
-EEG = pop_runica(EEG, 'icatype', 'runica', 'extended',1,'rndreset','yes','interrupt','on','pca',19);
+
+% Is 19 deterministically appearing as mentioned previously? Why not just measure it, if it should be 19 put an error here that verifies size(EEG.data, 1) is 19
+EEG = pop_runica(EEG, 'icatype', 'runica', 'extended',1,'rndreset','yes','interrupt','on','pca',size(EEG.data, 1));
 [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 4,'retrieve',3,'study',0); 
 EEG = pop_saveset( EEG, 'filename','ADHDP3_CRD_REREF_HPASS_WICA.set','filepath',savePath);
@@ -41,7 +43,6 @@ EEG = pop_saveset( EEG, 'filename','ADHDP3_CRD_REREF_HPASS_WICA.set','filepath',
 EEG = pop_loadset('filename','ADHDP3_CRD_REREF_HPASS_WICA.set','filepath',savePath);
 
 [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 );
-ALLEEG = pop_delset( ALLEEG, [5] ); % I think this is an error, not sure it should be in here
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 1,'retrieve',4,'study',0); 
 EEG = pop_saveset( EEG, 'filename','ADHDP3_CRD_REREF_HPASS_WICA.set','filepath',savePath);
 [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
@@ -50,12 +51,13 @@ EEG = pop_editset(EEG, 'icaweights', 'ALLEEG(4).icaweights', 'icasphere', 'ALLEE
 [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
 EEG = pop_saveset( EEG, 'filename','ADHDP3_CRD_REREF_WICA.set','filepath',savePath);
 [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
-pop_selectcomps(EEG, [1:19] );
+pop_selectcomps(EEG, [1:size(EEG.data, 1)] );
 
 % There is an odd interaction with the GUI where it doesnt seem to load the
 % data sets in properly until i manually load one in, its just a minor
 % inconvienience
-
+% This should fix it, sounds likely that you would need to rerender the GUI 
+eeglab redraw;
 
 % After that move on to generating microstates
 
@@ -80,7 +82,6 @@ EEG = pop_icflag(EEG, [NaN NaN;0.95 1;0.95 1;NaN NaN;0.95 1;NaN NaN;NaN NaN]);
 % blink epocs. This will be followed by additional processing but will
 % likely be part of a seperate pipeline.
 
-% TODO is this redundant
 [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
 EEG = pop_subcomp( EEG, [], 0);
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 5,'savenew',fullfile(savePath, 'ADHDP3_CRD_REREF pruned with ICA.set'),'gui','off');
