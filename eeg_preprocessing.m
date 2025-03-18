@@ -40,10 +40,15 @@ for dirIdx = 1:length(basePaths)
         
         % High-pass filtering (1 Hz)
         EEG = pop_eegfiltnew(EEG, 'locutoff', 1, 'plotfreqz', 1);
+        % EEG = pop_eegfiltnew(EEG, 'locutoff', 0.5, 'hicutoff', 60, 'plotfreqz', 1);
         
         % Independent Component Analysis (ICA)
         numChannels = size(EEG.data, 1);
         EEG = pop_runica(EEG, 'icatype', 'runica', 'extended', 1, 'rndreset', 'yes', 'interrupt', 'on', 'pca', numChannels);
+        
+        % Label and flag ICA components
+        EEG = pop_iclabel(EEG, 'default');
+        EEG = pop_icflag(EEG, [NaN NaN;0.95 1;0.95 1;NaN NaN;0.95 1;NaN NaN;NaN NaN]);
 
         % Save ICA dataset
         if contains(basePath, 'Control', 'IgnoreCase', true)
