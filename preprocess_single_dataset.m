@@ -46,6 +46,12 @@ EEG = pop_icflag(EEG, [NaN NaN; 0.95 1; 0.95 1; NaN NaN; 0.95 1; NaN NaN; NaN Na
 % Save the ICA dataset
 EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', outputFolder);
 
+% --- Call blink detection + epoching function ---
+[EEG, ALLEEG, CURRENTSET] = processEEGWithBlinks(EEG, ALLEEG, CURRENTSET);
+
+% Save the dataset after blink event detection and epoching
+EEG = pop_saveset(EEG, 'filename', [baseName, '_blinkProcessed.set'], 'filepath', outputFolder);
+
 %% Debugging Step 3: Re-referencing Data (Optional)
 % You can apply re-referencing to average reference or specific channels
 EEG = pop_reref(EEG, []);  % Re-reference to the average of all channels (can specify specific channels)
