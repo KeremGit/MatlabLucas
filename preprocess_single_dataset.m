@@ -46,7 +46,10 @@ EEG = pop_icflag(EEG, [NaN NaN; 0.95 1; 0.95 1; NaN NaN; 0.95 1; NaN NaN; NaN Na
 % Save the ICA dataset
 EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', outputFolder);
 
-% --- Call blink detection + epoching function ---
+% Automatically assign vEOG IC based on ICLabel results
+EEG = select_vEOG_IC(EEG, 0.9);  % You can tweak the threshold if needed
+
+% Now process blink events and epochs
 [EEG, ALLEEG, CURRENTSET] = processEEGWithBlinks(EEG, ALLEEG, CURRENTSET);
 
 % Save the dataset after blink event detection and epoching
