@@ -51,9 +51,9 @@ EEG = eeg_checkset(EEG, 'eventconsistency');
 %% --- Part 4: Epoching ---
 % Bandpass filter (0.1–40 Hz)
 % if nargin >= 3
-  %  [ALLEEG, EEG, CURRENTSET] = bemobil_filter(ALLEEG, EEG, CURRENTSET, 0.1, 40);
+%  [ALLEEG, EEG, CURRENTSET] = bemobil_filter(ALLEEG, EEG, CURRENTSET, 0.1, 40);
 %else
- %   EEG = bemobil_filter([], EEG, [], 0.1, 40); % if no ALLEEG provided
+%   EEG = bemobil_filter([], EEG, [], 0.1, 40); % if no ALLEEG provided
 %end
 %EEG = eeg_checkset(EEG);
 
@@ -90,14 +90,14 @@ EEG = pop_saveset(EEG, 'filename', [baseName, '_blinkProcessed.set'], 'filepath'
 EEG = pop_icflag(EEG, [NaN NaN; 0.95 1; 0.95 1; NaN NaN; 0.95 1; NaN NaN; NaN NaN]);
 [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
 EEG = pop_subcomp( EEG, [], 0);
-[ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 5,'savenew','/MATLAB Drive/Preprocessing Data Sets 2/ADHDP3_CRD_REREF pruned with ICA.set','gui','off');
+[ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 5,'savenew','/MATLAB Drive/Preprocessing Data Sets 2/Blink_CRD_REREF pruned with ICA.set','gui','off');
 
 %% Debugging Step 3: Re-referencing Data again to average
 % You can apply re-referencing to average reference or specific channels
 EEG = pop_reref(EEG, []);  % Re-reference to the average of all channels (can specify specific channels)
 
 % Save the re-referenced data
-EEG = pop_saveset(EEG, 'filename', [baseName, '_re-referenced.set'], 'filepath', outputFolder);
+EEG = pop_saveset(EEG, 'filename', [baseName, '_blink-re-referenced.set'], 'filepath', outputFolder);
 
 %% Debugging Step 4: Filtering (Adjust if needed)
 
@@ -106,7 +106,7 @@ EEG = pop_saveset(EEG, 'filename', [baseName, '_re-referenced.set'], 'filepath',
 EEG = pop_eegfiltnew(EEG, 'locutoff', 0.5, 'hicutoff', 60, 'plotfreqz', 1);  % Band-pass filter
 
 % Save the filtered data
-EEG = pop_saveset(EEG, 'filename', [baseName, '_filtered.set'], 'filepath', outputFolder);
+EEG = pop_saveset(EEG, 'filename', [baseName, '_blink-filtered.set'], 'filepath', outputFolder);
 
 %% Debugging Step 5: Visualize EEG Data
 % You can visualize the EEG data after each step
@@ -114,7 +114,6 @@ pop_eegplot(EEG, 1, 1, 1);  % Open EEG plot to visually inspect the data
 
 %% Final Save of Processed Data
 % Save the final dataset after all preprocessing steps
-EEG = pop_saveset(EEG, 'filename', [baseName, '_final.set'], 'filepath', outputFolder);
-fprintf('Processed and saved: %s\n', baseName);
+EEG = pop_saveset(EEG, 'filename', [baseName, '_blink-final.set'], 'filepath', outputFolder);
 
 end
