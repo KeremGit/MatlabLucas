@@ -1,4 +1,4 @@
-function [EEG, ALLEEG, CURRENTSET] = processEEGWithBlinks(EEG, ALLEEG, CURRENTSET)
+function processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName)
 % processEEGWithBlinks - Detects blinks from vEOG IC, creates blink events, filters,
 % and epochs EEG data based on specific stimulus markers.
 %
@@ -10,7 +10,15 @@ function [EEG, ALLEEG, CURRENTSET] = processEEGWithBlinks(EEG, ALLEEG, CURRENTSE
 % Outputs:
 %   EEG, ALLEEG, CURRENTSET - Updated EEG structures
 
+basePath = './files/ADHD/';  % Change to your dataset's directory
+capPath = './files/Standard-10-20-Cap19new/Standard-10-20-Cap19new.ced';  % Your electrode layout
+savePath = './files/Preprocessing Data Sets 2/';  % Output directory for processed data
+
+outputFolder = fullfile(savePath, 'Processed Single Dataset');
+if ~exist(outputFolder, 'dir'), mkdir(outputFolder); end
+
 %% --- Part 1: Select ICs ---
+EEG.icaact = (EEG.icaweights * EEG.icasphere) * EEG.data(EEG.icachansind, :);
 vEOG_IC = EEG.etc.ICs4events.vEOG;
 abs_vEOG = abs(EEG.icaact(vEOG_IC, :));
 
@@ -42,12 +50,12 @@ EEG = eeg_checkset(EEG, 'eventconsistency');
 
 %% --- Part 4: Epoching ---
 % Bandpass filter (0.1–40 Hz)
-if nargin >= 3
-    [ALLEEG, EEG, CURRENTSET] = bemobil_filter(ALLEEG, EEG, CURRENTSET, 0.1, 40);
-else
-    EEG = bemobil_filter([], EEG, [], 0.1, 40); % if no ALLEEG provided
-end
-EEG = eeg_checkset(EEG);
+% if nargin >= 3
+  %  [ALLEEG, EEG, CURRENTSET] = bemobil_filter(ALLEEG, EEG, CURRENTSET, 0.1, 40);
+%else
+ %   EEG = bemobil_filter([], EEG, [], 0.1, 40); % if no ALLEEG provided
+%end
+%EEG = eeg_checkset(EEG);
 
 % Find 'Stim-60' and 'Stim-40' events
 epoch_events = {};
@@ -72,5 +80,11 @@ EEG = eeg_checkset(EEG);
 
 % Baseline correction (-500 to 0 ms)
 EEG = pop_rmbase(EEG, [-500 0]);
+
+EEG = pop_saveset(EEG, 'filename', [baseName, '_blinkProcessed.set'], 'filepath', outputFolder);
+
+% Everything before here needs to before the dataset has been pruned with
+% the ICA but the final preprocessing steps will need to happen after and
+% then saved
 
 end
