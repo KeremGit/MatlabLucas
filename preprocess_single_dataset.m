@@ -6,7 +6,7 @@ capPath = fileConfig.capPath;
 savePath = fileConfig.savePath;
 
 % Ensure save directory exists
-if ~exist(outputFolder, 'dir'), mkdir(savePath); end
+if ~exist(savePath, 'dir'), mkdir(savePath); end
 
 [ALLEEG, EEG, CURRENTSET, ALLCOM] = eeglab('nogui');
 inputFile = fullfile(inputFile);
@@ -35,7 +35,7 @@ EEG = pop_saveset(EEG, 'filename', [baseName, '_CRD.set'], 'filepath', savePath)
 EEG = pop_eegfiltnew(EEG, 'locutoff', 1, 'plotfreqz', 1);  % High-pass filter at 1Hz
 
 % Save the cleaned EEG dataset
-EEG = pop_saveset(EEG, 'filename', [baseName, '_cleaned.set'], 'filepath', outputFolder);
+EEG = pop_saveset(EEG, 'filename', [baseName, '_cleaned.set'], 'filepath', savePath);
 
 %% Debugging Step 2: ICA for Artifact Removal
 % Run ICA on the cleaned data (you can change the number of components or settings)
@@ -47,7 +47,7 @@ EEG = pop_runica(EEG, 'icatype', 'runica', 'extended', 1, 'rndreset', 'yes', ...
 EEG = pop_iclabel(EEG, 'default');  % Label components based on predefined categories
 
 % Save the ICA dataset
-EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', outputFolder);
+EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', savePath);
 
 %% Blink ERP Extraction Component
 % Automatically assign vEOG IC based on ICLabel results
@@ -57,7 +57,7 @@ EEG = select_vEOG_IC(EEG, 0.9);  % You can tweak the threshold if needed
 processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName);
 
 % Save the dataset after blink event detection and epoching
-EEG = pop_saveset(EEG, 'filename', [baseName, '_blinkProcessed.set'], 'filepath', outputFolder);
+EEG = pop_saveset(EEG, 'filename', [baseName, '_blinkProcessed.set'], 'filepath', savePath);
 
 %% Back to Pre Blink ERP Extraction
 
@@ -67,22 +67,18 @@ EEG = pop_saveset(EEG, 'filename', [baseName, '_blinkProcessed.set'], 'filepath'
 EEG = pop_icflag(EEG, [NaN NaN; 0.95 1; 0.95 1; NaN NaN; 0.95 1; NaN NaN; NaN NaN]);
 
 % Save the ICA dataset
-EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', outputFolder);
+EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', savePath);
 
 % This here translates the ICA weights to the file file version without a
 % filter, its a mess though and needs fixing
 [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 );
 
 % Import EEG data
-EEG = pop_loadset('filename', [baseName '_CRD.set'], 'filepath', savePath);
+EEG_CRD = pop_loadset('filename', [baseName '_CRD.set'], 'filepath', savePath);
 
-[ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
-[ALLEEG EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, 4,'retrieve',3,'study',0);
-EEG = pop_editset(EEG, 'icaweights', 'ALLEEG(4).icaweights', 'icasphere', 'ALLEEG(4).icasphere', 'icachansind', 'ALLEEG(4).icachansind');
-[ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
-EEG = pop_saveset( EEG, 'filename','ADHDP3_CRD_REREF_WICA.set','filepath','/MATLAB Drive/Preprocessing Data Sets 2/');
-[ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
-pop_selectcomps(EEG, [1:19] );
+EEG_CRD = pop_editset(EEG_CRD, 'icaweights', EEG.icaweights, 'icasphere', EEG.icasphere, 'icachansind', EEG.icachansind);
+
+
 %% This is where the flagged components should be removed
 % We may need to flag them for removal again
 % Flag artifacts (use pop_icflag for automatic removal)
@@ -96,7 +92,7 @@ EEG = pop_subcomp( EEG, [], 0);
 EEG = pop_reref(EEG, []);  % Re-reference to the average of all channels (can specify specific channels)
 
 % Save the re-referenced data
-EEG = pop_saveset(EEG, 'filename', [baseName, '_re-referenced.set'], 'filepath', outputFolder);
+EEG = pop_saveset(EEG, 'filename', [baseName, '_re-referenced.set'], 'filepath', savePath);
 
 %% Debugging Step 4: Filtering (Adjust if needed)
 
@@ -105,7 +101,7 @@ EEG = pop_saveset(EEG, 'filename', [baseName, '_re-referenced.set'], 'filepath',
 EEG = pop_eegfiltnew(EEG, 'locutoff', 0.5, 'hicutoff', 60, 'plotfreqz', 1);  % Band-pass filter
 
 % Save the filtered data
-EEG = pop_saveset(EEG, 'filename', [baseName, '_filtered.set'], 'filepath', outputFolder);
+EEG = pop_saveset(EEG, 'filename', [baseName, '_filtered.set'], 'filepath', savePath);
 
 %% Debugging Step 5: Visualize EEG Data
 % You can visualize the EEG data after each step
@@ -113,7 +109,7 @@ pop_eegplot(EEG, 1, 1, 1);  % Open EEG plot to visually inspect the data
 
 %% Final Save of Processed Data
 % Save the final dataset after all preprocessing steps
-EEG = pop_saveset(EEG, 'filename', [baseName, '_final.set'], 'filepath', outputFolder);
+EEG = pop_saveset(EEG, 'filename', [baseName, '_final.set'], 'filepath', savePath);
 fprintf('Processed and saved: %s\n', baseName);
 
 
