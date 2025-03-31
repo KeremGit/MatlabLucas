@@ -1,13 +1,12 @@
 
-function preprocess_single_dataset(inputFile, doSave)
+function preprocess_single_dataset(inputFile, savePath, doSave)
 
-if nargin < 2
+if nargin < 3
     doSave = false;
 end
 
 fileConfig =  config();
 capPath = fileConfig.capPath;
-savePath = fileConfig.savePath;
 
 % Ensure save directory exists
 if ~exist(savePath, 'dir'), mkdir(savePath); end
@@ -61,7 +60,7 @@ end
 % Automatically assign vEOG IC based on ICLabel results
 
 % Process blink events and epochs
-processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName, doSave);
+processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName, savePath, doSave);
 
 %% Back to Pre Blink ERP Extraction
 % Flag artifacts (use pop_icflag for automatic removal)

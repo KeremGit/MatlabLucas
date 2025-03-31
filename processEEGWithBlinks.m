@@ -1,4 +1,4 @@
-function processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName, doSave)
+function processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName, savePath, doSave)
 % processEEGWithBlinks - Detects blinks from vEOG IC, creates blink events, filters,
 % and epochs EEG data based on specific stimulus markers.
 %
@@ -10,12 +10,10 @@ function processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName, doSave)
 % Outputs:
 %   EEG, ALLEEG, CURRENTSET - Updated EEG structures
 
-if nargin < 5
+if nargin < 6
     doSave = false;
 end
 
-cfg = config();
-savePath = cfg.savePath;
 if ~exist(savePath, 'dir'), mkdir(savePath); end
 
 %% --- Part 1: Select ICs ---
