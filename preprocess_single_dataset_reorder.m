@@ -27,9 +27,12 @@ EEG = pop_saveset(EEG, 'filename', [baseName, '_raw.set'], 'filepath', savePath)
 %% Debugging Step 1: Clean Raw Data - Settings need editing ie burst criterion off
 % Clean EEG data to remove artifacts (you can tweak the parameters)
 EEG = pop_clean_rawdata(EEG, 'FlatlineCriterion', 5, 'ChannelCriterion', 0.8, ...
-    'LineNoiseCriterion', 4, 'Highpass', 'off', 'BurstCriterion', 20, ...
+    'LineNoiseCriterion', 4, 'Highpass', 'off', 'BurstCriterion', 'off', ...
     'WindowCriterion', 'off', 'BurstRejection', 'off', 'Distance', 'Euclidean');
 
+EEG = pop_reref(EEG, []);  % Re-reference to the average of all channels (can specify specific channels)
+
+EEG = pop_saveset(EEG, 'filename', [baseName, '_CRD.set'], 'filepath', savePath);
 %% Moved the first high pass 1 Hz filter here
 
 % Apply a high-pass filter (e.g., 1Hz) or band-pass filter as needed
@@ -55,7 +58,7 @@ EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', outputFol
 EEG = select_vEOG_IC(EEG, 0.9);  % You can tweak the threshold if needed
 
 % Now process blink events and epochs
-[EEG, ALLEEG, CURRENTSET] = processEEGWithBlinks(EEG, ALLEEG, CURRENTSET);
+processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName);
 
 % Save the dataset after blink event detection and epoching
 EEG = pop_saveset(EEG, 'filename', [baseName, '_blinkProcessed.set'], 'filepath', outputFolder);
@@ -73,9 +76,15 @@ EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', outputFol
 % This here translates the ICA weights to the file file version without a
 % filter, its a mess though and needs fixing
 [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 );
-ALLEEG = pop_delset( ALLEEG, [5] ); % I think this is an error, not sure it should be in here
-[ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 1,'retrieve',4,'study',0); 
-EEG = pop_saveset( EEG, 'filename','ADHDP3_CRD_REREF_HPASS_WICA.set','filepath','/MATLAB Drive/Preprocessing Data Sets 2/');
+
+% Specify the file name for the dataset you want to process (change filename accordingly)
+inputFile = fullfile(savePath, baseName, '_CRD.set');  % Change to the actual dataset name
+
+baseName = baseName + "_CRD.set"
+
+% Import EEG data
+EEG = pop_loadset('filename', baseName, 'filepath', savePath);
+
 [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
 [ALLEEG EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, 4,'retrieve',3,'study',0); 
 EEG = pop_editset(EEG, 'icaweights', 'ALLEEG(4).icaweights', 'icasphere', 'ALLEEG(4).icasphere', 'icachansind', 'ALLEEG(4).icachansind');
@@ -85,7 +94,8 @@ EEG = pop_saveset( EEG, 'filename','ADHDP3_CRD_REREF_WICA.set','filepath','/MATL
 pop_selectcomps(EEG, [1:19] );
 %% This is where the flagged components should be removed
 % We may need to flag them for removal again
-
+% Flag artifacts (use pop_icflag for automatic removal)
+EEG = pop_icflag(EEG, [NaN NaN; 0.95 1; 0.95 1; NaN NaN; 0.95 1; NaN NaN; NaN NaN]);
 [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
 EEG = pop_subcomp( EEG, [], 0);
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 5,'savenew','/MATLAB Drive/Preprocessing Data Sets 2/ADHDP3_CRD_REREF pruned with ICA.set','gui','off');
