@@ -6,8 +6,7 @@ capPath = fileConfig.capPath;
 savePath = fileConfig.savePath;
 
 % Ensure save directory exists
-outputFolder = fullfile(savePath, 'Processed Single Dataset');
-if ~exist(outputFolder, 'dir'), mkdir(outputFolder); end
+if ~exist(outputFolder, 'dir'), mkdir(savePath); end
 
 [ALLEEG, EEG, CURRENTSET, ALLCOM] = eeglab('nogui');
 inputFile = fullfile(inputFile);
