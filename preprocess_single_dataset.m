@@ -1,9 +1,12 @@
 
-function preprocess_single_dataset(inputFile)
+function preprocess_single_dataset(inputFile, savePath, doSave)
+
+if nargin < 3
+    doSave = false;
+end
 
 fileConfig =  config();
 capPath = fileConfig.capPath;
-savePath = fileConfig.savePath;
 
 % Ensure save directory exists
 if ~exist(savePath, 'dir'), mkdir(savePath); end
@@ -18,8 +21,9 @@ EEG = pop_importdata('dataformat', 'matlab', 'nbchan', 0, 'data', inputFile, ...
     'xmin', 0, 'group', 'EXP', 'chanlocs', capPath);
 
 % Save raw EEG dataset (save raw data for reference)
-EEG = pop_saveset(EEG, 'filename', [baseName, '_raw.set'], 'filepath', savePath);
-
+if doSave
+    EEG = pop_saveset(EEG, 'filename', [baseName, '_raw.set'], 'filepath', savePath);
+end
 %% Debugging Step 1: Clean Raw Data - Settings need editing ie burst criterion off
 % Clean EEG data to remove artifacts (you can tweak the parameters)
 EEG = pop_clean_rawdata(EEG, 'FlatlineCriterion', 5, 'ChannelCriterion', 0.8, ...
@@ -27,16 +31,17 @@ EEG = pop_clean_rawdata(EEG, 'FlatlineCriterion', 5, 'ChannelCriterion', 0.8, ..
     'WindowCriterion', 'off', 'BurstRejection', 'off', 'Distance', 'Euclidean');
 
 EEG = pop_reref(EEG, []);  % Re-reference to the average of all channels (can specify specific channels)
-
 EEG = pop_saveset(EEG, 'filename', [baseName, '_CRD.set'], 'filepath', savePath);
+
 %% Moved the first high pass 1 Hz filter here
 
 % Apply a high-pass filter (e.g., 1Hz) or band-pass filter as needed
 EEG = pop_eegfiltnew(EEG, 'locutoff', 1, 'plotfreqz', 1);  % High-pass filter at 1Hz
 
 % Save the cleaned EEG dataset
-EEG = pop_saveset(EEG, 'filename', [baseName, '_cleaned.set'], 'filepath', savePath);
-
+if doSave
+    EEG = pop_saveset(EEG, 'filename', [baseName, '_cleaned.set'], 'filepath', savePath);
+end
 %% Debugging Step 2: ICA for Artifact Removal
 % Run ICA on the cleaned data (you can change the number of components or settings)
 numChannels = size(EEG.data, 1);  % Number of channels in the dataset
@@ -47,71 +52,28 @@ EEG = pop_runica(EEG, 'icatype', 'runica', 'extended', 1, 'rndreset', 'yes', ...
 EEG = pop_iclabel(EEG, 'default');  % Label components based on predefined categories
 
 % Save the ICA dataset
-EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', savePath);
+if doSave
+    EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', savePath);
+end
 
 %% Blink ERP Extraction Component
 % Automatically assign vEOG IC based on ICLabel results
-EEG = select_vEOG_IC(EEG, 0.9);  % You can tweak the threshold if needed
 
-% Now process blink events and epochs
-processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName);
-
-% Save the dataset after blink event detection and epoching
-EEG = pop_saveset(EEG, 'filename', [baseName, '_blinkProcessed.set'], 'filepath', savePath);
+% Process blink events and epochs
+processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName, savePath, doSave);
 
 %% Back to Pre Blink ERP Extraction
-
-% Need load appropriate file function here
-
 % Flag artifacts (use pop_icflag for automatic removal)
 EEG = pop_icflag(EEG, [NaN NaN; 0.95 1; 0.95 1; NaN NaN; 0.95 1; NaN NaN; NaN NaN]);
 
 % Save the ICA dataset
 EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', savePath);
 
-% This here translates the ICA weights to the file file version without a
-% filter, its a mess though and needs fixing
-[ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 );
 
-% Import EEG data
+% Import EEG CRD data then apply ica weights
 EEG_CRD = pop_loadset('filename', [baseName '_CRD.set'], 'filepath', savePath);
-
 EEG_CRD = pop_editset(EEG_CRD, 'icaweights', EEG.icaweights, 'icasphere', EEG.icasphere, 'icachansind', EEG.icachansind);
 
-
-%% This is where the flagged components should be removed
-% We may need to flag them for removal again
-% Flag artifacts (use pop_icflag for automatic removal)
-EEG = pop_icflag(EEG, [NaN NaN; 0.95 1; 0.95 1; NaN NaN; 0.95 1; NaN NaN; NaN NaN]);
-[ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
-EEG = pop_subcomp( EEG, [], 0);
-[ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 5,'savenew','/MATLAB Drive/Preprocessing Data Sets 2/ADHDP3_CRD_REREF pruned with ICA.set','gui','off');
-
-%% Debugging Step 3: Re-referencing Data again to average
-% You can apply re-referencing to average reference or specific channels
-EEG = pop_reref(EEG, []);  % Re-reference to the average of all channels (can specify specific channels)
-
-% Save the re-referenced data
-EEG = pop_saveset(EEG, 'filename', [baseName, '_re-referenced.set'], 'filepath', savePath);
-
-%% Debugging Step 4: Filtering (Adjust if needed)
-
-% Alternatively, you can use a band-pass filter between 0.5Hz and 60Hz -
-% yeah we want this one
-EEG = pop_eegfiltnew(EEG, 'locutoff', 0.5, 'hicutoff', 60, 'plotfreqz', 1);  % Band-pass filter
-
-% Save the filtered data
-EEG = pop_saveset(EEG, 'filename', [baseName, '_filtered.set'], 'filepath', savePath);
-
-%% Debugging Step 5: Visualize EEG Data
-% You can visualize the EEG data after each step
-pop_eegplot(EEG, 1, 1, 1);  % Open EEG plot to visually inspect the data
-
-%% Final Save of Processed Data
-% Save the final dataset after all preprocessing steps
-EEG = pop_saveset(EEG, 'filename', [baseName, '_final.set'], 'filepath', savePath);
-fprintf('Processed and saved: %s\n', baseName);
-
-
+processEEG_ICARemoval(EEG_CRD, baseName, savePath, doSave, '');
 
 end
