@@ -6,13 +6,15 @@ function processEEGWithBlinks(EEG, ALLEEG, CURRENTSET, baseName)
 %   EEG         - EEG dataset with ICA and ICs4events already defined
 %   ALLEEG      - Optional, ALLEEG structure for EEGLAB compatibility
 %   CURRENTSET  - Optional, CURRENTSET index for EEGLAB
+%   baseName    - File stub for saving blink data
 %
 % Outputs:
 %   EEG, ALLEEG, CURRENTSET - Updated EEG structures
 
-basePath = './files/ADHD/';  % Change to your dataset's directory
-capPath = './files/Standard-10-20-Cap19new/Standard-10-20-Cap19new.ced';  % Your electrode layout
-savePath = './files/Preprocessing Data Sets 2/';  % Output directory for processed data
+fileConfig =  config();
+
+% Access the individual paths:
+savePath = fileConfig.savePath;
 
 outputFolder = fullfile(savePath, 'Processed Single Dataset');
 if ~exist(outputFolder, 'dir'), mkdir(outputFolder); end
@@ -49,13 +51,6 @@ end
 EEG = eeg_checkset(EEG, 'eventconsistency');
 
 %% --- Part 4: Epoching ---
-% Bandpass filter (0.1–40 Hz)
-% if nargin >= 3
-  %  [ALLEEG, EEG, CURRENTSET] = bemobil_filter(ALLEEG, EEG, CURRENTSET, 0.1, 40);
-%else
- %   EEG = bemobil_filter([], EEG, [], 0.1, 40); % if no ALLEEG provided
-%end
-%EEG = eeg_checkset(EEG);
 
 % Find 'Stim-60' and 'Stim-40' events
 epoch_events = {};
@@ -81,7 +76,7 @@ EEG = eeg_checkset(EEG);
 % Baseline correction (-500 to 0 ms)
 EEG = pop_rmbase(EEG, [-500 0]);
 
-EEG = pop_saveset(EEG, 'filename', [baseName, '_blinkProcessed.set'], 'filepath', outputFolder);
+pop_saveset(EEG, 'filename', [baseName, '_blinkProcessed.set'], 'filepath', outputFolder);
 
 % Everything before here needs to before the dataset has been pruned with
 % the ICA but the final preprocessing steps will need to happen after and
