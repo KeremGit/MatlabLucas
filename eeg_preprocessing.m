@@ -5,7 +5,7 @@ cfg = config();
 savePath = cfg.savePath;
 
 controlFolder = fullfile(savePath, 'Processed Control');
-experimentalFolder = fullfile(savePath, 'Processed Experimental');
+experimentalFolder = fullfile(savePath, 'Processed ADHD');
 
 % Ensure save directories exist
 if ~exist(controlFolder, 'dir'), mkdir(controlFolder); end
