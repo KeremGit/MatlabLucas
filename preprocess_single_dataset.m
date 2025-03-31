@@ -75,6 +75,6 @@ EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', savePath)
 EEG_CRD = pop_loadset('filename', [baseName '_CRD.set'], 'filepath', savePath);
 EEG_CRD = pop_editset(EEG_CRD, 'icaweights', EEG.icaweights, 'icasphere', EEG.icasphere, 'icachansind', EEG.icachansind);
 
-processEEG_ICARemoval(EEG, baseName, savePath, doSave, '');
+processEEG_ICARemoval(EEG_CRD, baseName, savePath, doSave, '');
 
 end
