@@ -43,10 +43,19 @@ end
 
 %% Debugging Step 2: Clean Raw Data - Settings need editing ie burst criterion off
 % Clean EEG data to remove artifacts (you can tweak the parameters)
+
+num_channels_before = length(EEG.chanlocs);
+
 EEG = pop_clean_rawdata(EEG, 'FlatlineCriterion', 5, 'ChannelCriterion', 0.8, ...
     'LineNoiseCriterion', 4, 'Highpass', 'off', 'BurstCriterion', 'off', ...
     'WindowCriterion', 'off', 'BurstRejection', 'off', 'Distance', 'Euclidean');
 
+num_channels_after = length(EEG.chanlocs);
+
+if (num_channels_before ~= num_channels_after)
+    EEG = pop_interp(EEG, ALLEEG(1).chanlocs, 'spherical');
+    [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 2,'setname','test_interpol','gui','off');
+end
 %% Need an if statement her to check if step 2 removed a channel
 
 % leading to this code if yes - missing channels need to be interpolated
@@ -91,7 +100,7 @@ EEG = pop_iclabel(EEG, 'default');  % Label components based on predefined categ
 % Save the ICA dataset
 if doSave
     EEG = pop_saveset(EEG, 'filename', [baseName, '_ICA.set'], 'filepath', savePath);
-    
+
     %pop_eegplot( EEG, 0, 1, 1);
     %figure; pop_spectopo(EEG, 0, [0      262257.8125], 'EEG' , 'freq', [10], 'plotchan', 0, 'percent', 20, 'icacomps', [1:numChannels], 'nicamaps', 5, 'freqrange',[2 64],'electrodes','off');
 
