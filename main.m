@@ -7,4 +7,4 @@ savePath = fileConfig.savePath;
 
 inputFile = fullfile(basePathADHD, 'v3p.mat');  % Change to the actual dataset name
 
-preprocess_single_dataset(inputFile)
+preprocess_single_dataset(inputFile, savePath)

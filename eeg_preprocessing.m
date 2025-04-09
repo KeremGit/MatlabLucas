@@ -27,7 +27,7 @@ files = dir(fullfile(basePath, '*.mat'));
 
 for fileIdx = 1:length(files)
     inputFile = fullfile(basePath, files(fileIdx).name);
-    preprocess_single_dataset(inputFile, savePath)
+    preprocess_single_dataset(inputFile, savePath, true) 
 
 end
 end
