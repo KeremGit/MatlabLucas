@@ -15,7 +15,7 @@ elseif ~isempty(tag)
 end
 
 % Step 1: Flag & remove components
-EEG = pop_icflag(EEG, [NaN NaN; 0.95 1; 0.95 1; NaN NaN; 0.95 1; NaN NaN; NaN NaN]);
+EEG = pop_icflag(EEG, [NaN NaN; 0.90 1; 0.90 1; NaN NaN; 0.90 1; NaN NaN; NaN NaN]);
 EEG = pop_subcomp(EEG, [], 0);
 if doSave
     EEG = pop_saveset(EEG, 'filename', [baseName, '_', tag, 'pruned.set'], 'filepath', savePath);
@@ -28,7 +28,7 @@ if doSave
 end
 
 % Step 3: Band-pass filter (0.5 - 60 Hz)
-EEG = pop_eegfiltnew(EEG, 'locutoff', 0.5, 'hicutoff', 60, 'plotfreqz', 1);
+EEG = pop_eegfiltnew(EEG, 'locutoff', 0.5, 'hicutoff', 63, 'plotfreqz', 1);
 if doSave
     EEG = pop_saveset(EEG, 'filename', [baseName, '_', tag, 'filtered.set'], 'filepath', savePath);
 end
